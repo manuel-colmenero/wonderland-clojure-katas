@@ -10,6 +10,10 @@
     (is (= 2 (dist "head" "teal")))
     (is (= 4 (dist "bank" "loan")))))
 
+(deftest candidates-test
+  (testing "it finds candidates for words"
+    (is (= '("heal") (candidates "head" [])))))
+
 (deftest solver-test
   (testing "with word links found"
     (is (= ["head" "heal" "teal" "tell" "tall" "tail"]

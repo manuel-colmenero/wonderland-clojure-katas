@@ -23,19 +23,19 @@
 (defn dist [word1 word2] 
   (transduce count-different + (interleave-all word1 word2)))
 
-(defn next-word [word stack]
-  (reduce
-    (fn [_ w]
-      (if (and (= 1 (dist w word)) (= -1 (.indexOf stack w)))
-        (reduced w)))
-    words))
+(defn candidates [word stack]
+  (->> words
+       (filter #(= 1 (dist word %)))
+       (filter #(= -1 (.indexOf stack %)))))
 
-(defn doublets [word1 word2]
-  (loop [stack []
-         w word1]
-    (println w stack)
-    (if (= w word2)
-      (conj stack w)
-      (if-let [found (next-word w stack)]
-        (recur (conj stack w) found)
-        []))))
+(defn doublets
+  ([word1 word2] (doublets word1 word2 []))
+  ([word1 word2 stack]
+   (if (= word1 word2)
+     (conj stack word1)
+     (reduce
+       (fn [_ w] 
+         (let [res (doublets w word2 (conj stack word1))]
+           (if (not-empty res) (reduced res) res)))
+       []
+       (candidates word1 stack)))))
