@@ -4,7 +4,6 @@
 
 (deftest dist-test
   (testing "simple distance between two words"
-    (is (= 3 (dist "book" "booklet")))
     (is (= 0 (dist "book" "book")))
     (is (= 1 (dist "book" "look")))
     (is (= 2 (dist "head" "teal")))

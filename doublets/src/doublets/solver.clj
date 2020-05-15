@@ -7,24 +7,12 @@
                (slurp)
                (read-string)))
 
-(defn seqpad [n coll]
-  (concat coll (repeat (- n (count coll)) nil)))
-
-(defn interleave-all [c1 c2]
-  (let [len (reduce max (map count [c1 c2]))]
-    (apply interleave (map (partial seqpad len) [c1 c2]))))
-
-(def count-different
-  (comp (partition-all 2)
-        (map (partial apply =))
-        (filter false?)
-        (map (constantly 1))))
-
 (defn dist [word1 word2] 
-  (transduce count-different + (interleave-all word1 word2)))
-
+  (->> (map = word1 word2) (filter false?) (count)))
+  
 (defn candidates [word stack]
   (->> words
+       (filter #(= (count word) (count %)))
        (filter #(= 1 (dist word %)))
        (filter #(= -1 (.indexOf stack %)))))
 
