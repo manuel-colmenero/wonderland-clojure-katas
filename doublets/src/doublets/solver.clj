@@ -11,10 +11,11 @@
   (->> (map = word1 word2) (filter false?) (count)))
   
 (defn candidates [word stack]
-  (->> words
-       (filter #(= (count word) (count %)))
-       (filter #(= 1 (dist word %)))
-       (filter #(= -1 (.indexOf stack %)))))
+  (into []
+        (comp (filter #(= (count word) (count %)))
+              (filter #(= 1 (dist word %)))
+              (filter #(= -1 (.indexOf stack %))))
+        words))
 
 (defn doublets
   ([word1 word2] (doublets word1 word2 []))
