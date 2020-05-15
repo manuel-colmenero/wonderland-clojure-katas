@@ -7,19 +7,17 @@
     (comp (drop (.indexOf letters l)) (take (count letters)))
     (cycle letters)))
 
-(defn- encode-letter [[k l]]
+(defn- encode-letter [k l]
   (nth (get-row l) (.indexOf letters k)))
 
-(defn- decode-letter [[k l]]
+(defn- decode-letter [k l]
   (nth letters (.indexOf (get-row k) l)))
 
-(defn- decipher-letter [[c l]]
+(defn- decipher-letter [c l]
   (nth letters (.indexOf (get-row l) c)))
 
 (defn- transform [mapper keyword message]
-  (transduce
-    (comp (partition-all 2) (map mapper)) str
-    (interleave keyword message)))
+  (reduce str (map mapper keyword message)))
 
 (defn- uncycle [string]
   (some (fn [len]
