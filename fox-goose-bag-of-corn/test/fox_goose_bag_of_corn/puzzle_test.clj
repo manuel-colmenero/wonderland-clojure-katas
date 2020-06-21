@@ -3,6 +3,40 @@
             [fox-goose-bag-of-corn.puzzle :refer :all]
             [clojure.set]))
 
+(deftest safe-test
+  (testing "an island with you in it is always safe"
+    (is (true? (safe? [:you :fox :goose])))
+    (is (true? (safe? [:you :corn :goose])))
+    (is (true? (safe? [:you :corn :fox]))))
+  (testing "fox and corn are fine together"
+    (is (true? (safe? [:fox :corn]))))
+  (testing "an island is not safe"
+    (is (false? (safe? [:fox :goose])))
+    (is (false? (safe? [:corn :goose])))))
+
+(deftest find-you-test
+  (testing "it finds where you are"
+    (is (= 0 (find-you [[:fox :goose :corn :you] [:boat] []])))
+    (is (= 1 (find-you [[:fox :goose :corn] [:boat :you] []])))
+    (is (= 2 (find-you [[:fox :goose :corn] [:boat] [:you]])))))
+
+(deftest neighbours-test
+  (testing "it finds the possible next steps"
+    (is (= (neighbours [[:fox :goose :corn :you] [:boat] []])
+           [[[:goose :corn] [:boat :you :fox] []]
+            [[:fox :corn] [:boat :you :goose] []]
+            [[:fox :goose] [:boat :you :corn] []]]))
+    (is (= (neighbours [[:fox :goose :corn] [:boat :you] []])
+           [[[:fox :goose :corn :you] [:boat] []]
+            [[:fox :goose :corn] [:boat] [:you]]]))
+    (is (= (neighbours [[:fox :goose] [:boat :you :corn] []])
+           [[[:fox :goose :you :corn] [:boat] []]
+            [[:fox :goose] [:boat] [:you :corn]]]))
+    (is (= (neighbours [[:fox] [:boat] [:you :corn :goose]])
+           [[[:fox] [:boat :you] [:corn :goose]]
+            [[:fox] [:boat :you :goose] [:corn]]
+            [[:fox] [:boat :you :corn] [:goose]]]))))
+
 (defn validate-move [step1 step2]
   (testing "only you and another thing can move"
     (let [diff1 (clojure.set/difference step1 step2)
