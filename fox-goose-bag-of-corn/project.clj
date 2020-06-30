@@ -4,4 +4,5 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.9.0"]]
+  :plugins [[cider/cider-nrepl "0.25.2"]]
   :main fox-goose-bag-of-corn.puzzle)

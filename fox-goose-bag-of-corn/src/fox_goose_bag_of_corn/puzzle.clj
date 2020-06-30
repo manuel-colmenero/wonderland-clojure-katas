@@ -1,5 +1,5 @@
 (ns fox-goose-bag-of-corn.puzzle
-  (:require [clojure.set :refer [subset? difference]]))
+  (:require [clojure.set :refer [subset? difference intersection union]]))
 
 (def start-pos [[:fox :goose :corn :you] [:boat] []])
 
@@ -14,14 +14,6 @@
 (defn transform [stage fns]
   (into [] (map #(%1 %2) fns stage)))
 
-(defn bring [thing]
-  [[(extract thing) (add thing) identity]
-   [identity (extract thing) (add thing)]])
-
-(defn go-back [& things]
-  [[identity (apply add things) (apply extract things)]
-   [(apply add things) (apply extract things) identity]])
-
 (defn safe? [things]
   (let [s (set things)]
     (or (contains? s :you)
@@ -33,12 +25,6 @@
 (defn find-you [stage]
   (first (filter some? (map-indexed #(when ((set %2) :you) %1) stage))))
 
-; Where is :you? if...
-; - it's in the first "island": bring anything on that island
-; - if it's in the boat...
-; -- alone? go back and forth
-; -- with thing? bring back and forth
-; - if it's in the island: bring something back or go back alone
 (defn neighbours [stage]
   (map (partial transform stage)
        (let [index (find-you stage)
@@ -50,14 +36,40 @@
            2 (concat [[identity (add) (extract)]]
                      (map #(vector identity (add %) (extract %)) things))))))
 
+(defn score [stage]
+  (let [things #{:you :fox :goose :corn}]
+    (reduce +
+            (map-indexed
+              (fn [idx c] (-> idx stage set (intersection things) count (* c)))
+              [2 1]))))
+
+(defn abs [n]
+  (if (neg? n) (- n) n))
+
+(defn dist [s1 s2]
+  (abs (apply - (map score [s1 s2]))))
+
+(defn reconstruct-path [came-from end]
+  (loop [current end
+         path '()]
+    (let [next-path (cons current path)]
+      (if-some [nxt (came-from current)]
+        (recur nxt next-path)
+        next-path))))
+
 (defn river-crossing-plan []
-  (reductions transform
-              start-pos
-              (concat
-                (bring :goose)
-                (go-back)
-                (bring :fox)
-                (go-back :goose)
-                (bring :corn)
-                (go-back)
-                (bring :goose))))
+  (loop [open-set #{start-pos}
+         came-from {}
+         g-score {start-pos 0}
+         f-score {start-pos (score start-pos)}]
+    (when (not-empty open-set)
+      (let [[current] (apply min-key val (filter #(-> % key open-set) g-score))]
+        (if (zero? (score current)) (reconstruct-path came-from current)
+          (let [nbs (filter valid? (neighbours current))
+                t-scores (zipmap nbs (map #(+ (g-score current) (dist current %)) nbs))
+                candidates (filter (fn [[neighbor t-score]] (< t-score (or (g-score neighbor) ##Inf))) t-scores)]
+            (recur
+              (-> open-set (disj current) (union (-> candidates keys set)))
+              (merge came-from (zipmap (keys candidates) (repeat current)))
+              (merge g-score candidates)
+              (merge f-score (zipmap (keys candidates) (map (fn [[k v]] (+ v (score k))) candidates))))))))))
